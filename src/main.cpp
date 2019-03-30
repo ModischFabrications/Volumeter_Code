@@ -9,7 +9,7 @@
 /*---------------*\
 Credits: Modisch Fabrications
 
-
+TODO: move into classes
 
 \*---------------*/
 
@@ -27,15 +27,15 @@ CRGB leds[N_LEDS];
 
 enum USER_MODE{
   OFF,
-  BAR_LOW,
-  BAR_HIGH,
-  DOT_LOW,
-  DOT_HIGH
+  BAR,
+  DOT
 };
 
+// directly used as brightness
 enum USER_BRIGHTNESS{
-  LOW_BRIGHTNESS = 63,
-  HIGH_BRIGHTNESS = 255
+  LOW_BR = 15,
+  NORMAL_BR = 63,
+  HIGH_BR = 255
 };
 
 struct User_Settings{
