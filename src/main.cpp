@@ -5,6 +5,13 @@
 // third-party
 #include <FastLED.h>
 
+// --- Notes
+/*---------------*\
+Credits: Modisch Fabrications
+
+
+
+\*---------------*/
 
 // --- statics, constants & defines
 
@@ -13,51 +20,77 @@
 
 #define N_LEDS 14
 
-CRGB led_strip[N_LEDS];
+CRGB leds[N_LEDS];
 
 #define EEPROM_MODE_ADDR 10
+#define EEPROM_BRIGHTNESS_ADDR 11
 
 enum USER_MODE{
   OFF,
-  BAR,
-  DOT
+  BAR_LOW,
+  BAR_HIGH,
+  DOT_LOW,
+  DOT_HIGH
+};
+
+enum USER_BRIGHTNESS{
+  LOW_BRIGHTNESS = 63,
+  HIGH_BRIGHTNESS = 255
+};
+
+struct User_Settings{
+  USER_MODE mode;
+  USER_BRIGHTNESS brightness;
 };
 
 // --- functions
 
-/**
- * blink a bit to show power is connected
- * 
- * */
-void hello(){
-  
-}
-
-void set_mode(USER_MODE mode){
-
-}
 
 /**
  * save mode to EEPROM for persistent storage
  * EEPROM has around 100k writes per cell, so use them carefully!
+ * It might be a good idea to switch cells with each new revision.
  * */
-void save_mode(USER_MODE mode){
-  EEPROM.update(EEPROM_MODE_ADDR, (uint8_t)mode);
+void save_settings(User_Settings settings){
+  EEPROM.update(EEPROM_MODE_ADDR, (uint8_t)settings.mode);
+  EEPROM.update(EEPROM_BRIGHTNESS_ADDR, (uint8_t)settings.brightness);
 }
 
-USER_MODE load_mode(){
-  return (USER_MODE) EEPROM.read(EEPROM_MODE_ADDR);
+User_Settings load_settings(){
+  User_Settings settings;
+  settings.mode =(USER_MODE) EEPROM.read(EEPROM_MODE_ADDR);
+  settings.brightness =(USER_BRIGHTNESS) EEPROM.read(EEPROM_BRIGHTNESS_ADDR);
+  return settings;
+}
+
+/**
+ * blink a bit to show power is connected
+ * (current implementation scrolls bar)
+ * */
+void hello_power(){
+  for (uint8_t i=0; i<N_LEDS; i++){
+    leds[i] = CRGB::White;
+    FastLED.show();
+    delay(1000/N_LEDS);  // 1 second for whole bar
+    leds[i] = CRGB::Black;
+  }
 }
 
 // --------------
 
 void setup() {
-  // put your setup code here, to run once:
+  // init hardware
   pinMode(PIN_RGB, OUTPUT);
   pinMode(PIN_BTN, INPUT_PULLUP);
 
-  FastLED.addLeds<WS2812B, PIN_RGB, RGB>(led_strip, N_LEDS);
-  FastLED.show();
+  FastLED.addLeds<WS2812B, PIN_RGB, RGB>(leds, N_LEDS);
+
+  // init subcomponents
+  User_Settings curr_settings = load_settings();
+  FastLED.setBrightness(curr_settings.brightness);
+
+  // all done
+  hello_power();
 }
 
 void loop() {
