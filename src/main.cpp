@@ -4,9 +4,7 @@
 // third-party
 #include <FastLED.h>
 
-
 // private, local
-#include "persistence.h"
 #include "uv_meter.h"
 
 /*------------Notes-----------*\
@@ -22,20 +20,21 @@ TODO:
 
 #define PIN_RGB 3
 #define PIN_BTN 2
+#define PIN_MIC 1
 
 #define N_LEDS 14
-
 CRGB leds[N_LEDS];
+
+#define DELAY_TO_SAVE 10
 
 // --- functions
 
-
-
 // --------------
 
-UV_Meter uv_meter;
+UV_Meter uv_meter(leds, N_LEDS, DELAY_TO_SAVE);
 
-void setup() {
+void setup()
+{
   // init hardware
   pinMode(PIN_RGB, OUTPUT);
   pinMode(PIN_BTN, INPUT_PULLUP);
@@ -43,13 +42,16 @@ void setup() {
   FastLED.addLeds<WS2812B, PIN_RGB, RGB>(leds, N_LEDS);
 
   // init subcomponents
-  uv_meter = UV_Meter(leds, N_LEDS);
 
   // all done
-  uv_meter.init();
+  uv_meter.startup();
 }
 
-void loop() {
-  // check button
+void loop()
+{
+  // TODO check button
+  //uv_meter.next_mode();
 
+  // TODO move to input smoothing
+  uv_meter.set_input_level(analogRead(PIN_MIC));
 }
