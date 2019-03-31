@@ -17,12 +17,12 @@ TODO:
 
 // --- statics, constants & defines
 
-#define PIN_LEDS PB1
+#define PIN_LEDS 1
 // PIN 7 is the only hardware interrupt on ATTiny85 (INT0)
 // attachInterrupt(0,wakeUpFunction, LOW);
 // (ISR are overkill in this case and are ignored)
-#define PIN_BTN PB2
-#define PIN_MIC PB4
+#define PIN_BTN 2
+#define PIN_MIC 4
 
 #define N_LEDS 14
 
