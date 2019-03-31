@@ -1,5 +1,7 @@
 #pragma once
 
+#include <FastLED.h>
+
 #include "settings.h"
 #include "persistence.h"
 
@@ -10,13 +12,12 @@
  * 
  * 
  * */
-class UV_Meter
+template <uint8_t PIN_LEDS, uint16_t N_LEDS> class UV_Meter
 {
   private:
     User_Settings settings;
 
-    CRGB *leds;
-    const uint16_t n_leds;
+    CRGB leds[N_LEDS];
 
     // "delayed persistence"
     const uint16_t delay_to_save; // max 1min to prevent dataloss
@@ -32,11 +33,11 @@ class UV_Meter
      * */
     void hello_power()
     {
-        for (uint8_t i = 0; i < n_leds; i++)
+        for (uint8_t i = 0; i < N_LEDS; i++)
         {
             leds[i] = CRGB::White;
             FastLED.show();
-            delay(1000 / n_leds); // 1 second for whole bar
+            delay(1000 / N_LEDS); // 1 second for whole bar
             leds[i] = CRGB::Black;
         }
     }
@@ -95,9 +96,11 @@ class UV_Meter
      * save to call "outside of time"
      * 
      * */
-    UV_Meter(CRGB *leds, const uint16_t n_leds, const uint16_t delay_to_save) : leds(leds), n_leds(n_leds), delay_to_save(delay_to_save)
+    UV_Meter(const uint16_t delay_to_save) : delay_to_save(delay_to_save)
     {
-        // nothing to do...
+        pinMode(PIN_LEDS, OUTPUT);
+
+        FastLED.addLeds<WS2812B, PIN_LEDS, RGB>(this->leds, N_LEDS);
     }
 
     /**
@@ -139,19 +142,19 @@ class UV_Meter
         // try switching brightness first
         if (this->settings.brightness == LOW_BR)
         {
-            new_settings.brightness == USER_BRIGHTNESS::MIDDLE_BR;
+            new_settings.brightness = USER_BRIGHTNESS::MIDDLE_BR;
             apply_settings(new_settings);
             return;
         }
         else if (this->settings.brightness == MIDDLE_BR)
         {
-            new_settings.brightness == USER_BRIGHTNESS::HIGH_BR;
+            new_settings.brightness = USER_BRIGHTNESS::HIGH_BR;
             apply_settings(new_settings);
             return;
         }
 
         // can't increase brightness, switch to next mode
-        new_settings.brightness == USER_BRIGHTNESS::LOW_BR;
+        new_settings.brightness = USER_BRIGHTNESS::LOW_BR;
 
         if (this->settings.mode == USER_MODE::BAR){
             new_settings.mode = USER_MODE::DOT;
