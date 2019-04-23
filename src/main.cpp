@@ -27,22 +27,22 @@ but ISRs are overkill in this case and are ignored
 `attachInterrupt(0, wakeUpFunction, LOW);`
 */
 
-#define PIN_BTN 2
-#define PIN_MIC 4
+const uint8_t PIN_BTN = 2;
+const uint8_t PIN_MIC = 4;
 
-#define N_LEDS 14
-#define N_THRESHOLD_YELLOW (uint8_t)(N_LEDS * 0.5)
-#define N_THRESHOLD_RED (uint8_t)(N_LEDS * 0.8)
+const uint8_t N_LEDS = 14;
+const uint8_t N_THRESHOLD_YELLOW = (N_LEDS * 0.5);
+const uint8_t N_THRESHOLD_RED = (N_LEDS * 0.8);
 
-#define DELAY_TO_SAVE_MS (uint16_t)(5 * 1000)
+const uint16_t DELAY_TO_SAVE_MS = (5 * 1000);
 
-#define N_READINGS 30
+const uint8_t N_READINGS = 30;
 
-#define T_DEBOUNCE_MS 50
+const uint16_t T_DEBOUNCE_MS = 50;
 
 UV_Meter<PIN_LEDS, N_LEDS> uv_meter(DELAY_TO_SAVE_MS, N_THRESHOLD_YELLOW, N_THRESHOLD_RED);
 
-Smoothed_Reader<uint8_t, N_READINGS> reader(PIN_MIC);
+Smoothed_Reader<uint8_t, N_READINGS> reader;
 
 // --- functions
 
@@ -89,6 +89,7 @@ void setup()
   // init hardware
 
   pinMode(PIN_BTN, INPUT_PULLUP);
+  pinMode(PIN_MIC, INPUT);
 
   // init subcomponents
 
@@ -104,7 +105,9 @@ void loop()
     uv_meter.next_mode();
   }
 
+  uint8_t input = analogRead(PIN_MIC);
+  reader.read(input);                 // remap! 
   uv_meter.read(reader.get_rolling_avg());
 
-  delay(1); // ADC minimum
+  delay(1); // ADC minimum, could be even lower
 }
