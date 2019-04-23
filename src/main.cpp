@@ -82,6 +82,26 @@ bool check_button_debounced(bool button_state)
   return false;
 }
 
+bool waveform_to_intensity(uint8_t raw_waveform)
+{
+  // MAX4466 has VCC/2 base level and rail-to-rail output
+  // UINT8_MAX (INT8_MAX) amplitudes
+
+  /* 5V   |    -----
+          |   /     \
+    2.5V  | --       -
+          |           \
+    0V    |            ----
+          ___________________
+  */ 
+
+  // 17 - 127 = -110 -> 110/255 = 0.43
+
+  uint8_t normalized_input = abs((int16_t)raw_waveform - INT8_MAX);
+
+  return normalized_input;
+}
+
 // --------------
 
 void setup()
@@ -105,8 +125,11 @@ void loop()
     uv_meter.next_mode();
   }
 
-  uint8_t input = analogRead(PIN_MIC);
-  reader.read(input);                 // remap! 
+  uint16_t raw_input = analogRead(PIN_MIC); // 10 bit ADC on ATTiny85
+  uint8_t scaled_input = map(raw_input, 0, 1023, 0, 255);
+  uint8_t intensity = waveform_to_intensity(scaled_input);
+
+  reader.read(intensity);
   uv_meter.read(reader.get_rolling_avg());
 
   delay(1); // ADC minimum, could be even lower
