@@ -3,12 +3,12 @@
 #include <Arduino.h>
 
 
-template <class INPUT_TYPE, uint8_t SAMPLE_SIZE> class Smoothed_Reader
+template <class INPUT_DATA_TYPE, uint8_t SAMPLE_SIZE> class Smoothed_Reader
 {
 private:
     const uint8_t pin_to_read;
 
-    INPUT_TYPE last_values[SAMPLE_SIZE];          // average over last readings
+    INPUT_DATA_TYPE last_values[SAMPLE_SIZE];          // average over last readings
     uint8_t next_writable_addr = 0;
 
 
@@ -34,9 +34,9 @@ public:
         }
     }
 
-    INPUT_TYPE get_rolling_avg()
+    INPUT_DATA_TYPE get_rolling_avg()
     {
-        INPUT_TYPE rolling_avg = 0;
+        INPUT_DATA_TYPE rolling_avg = 0;
 
         for (uint8_t i = 0; i < SAMPLE_SIZE; i++)
         {
