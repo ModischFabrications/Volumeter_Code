@@ -31,29 +31,30 @@ but ISRs are overkill in this case and are ignored
 #define PIN_MIC 4
 
 #define N_LEDS 14
+#define N_THRESHOLD_YELLOW (uint8_t)(N_LEDS * 0.5)
+#define N_THRESHOLD_RED (uint8_t)(N_LEDS * 0.8)
 
-#define DELAY_TO_SAVE 10
+#define DELAY_TO_SAVE_MS (uint16_t)(5 * 1000)
 
 #define N_READINGS 30
 
 #define T_DEBOUNCE_MS 50
 
-UV_Meter<PIN_LEDS, N_LEDS> uv_meter(DELAY_TO_SAVE);
+UV_Meter<PIN_LEDS, N_LEDS> uv_meter(DELAY_TO_SAVE_MS, N_THRESHOLD_YELLOW, N_THRESHOLD_RED);
+
 Smoothed_Reader<uint8_t, N_READINGS> reader(PIN_MIC);
 
 // --- functions
 
-bool check_button_debounced()
+bool check_button_debounced(bool button_state)
 {
   // this function will not trigger for the first
   // flank but for the "last", which should be stable
 
   static unsigned long last_debounce = 0;
-  static bool last_state = HIGH;
+  static bool last_state = true;
 
   unsigned long now = millis();
-
-  bool button_state = digitalRead(PIN_BTN);
 
   if (button_state != last_state)
   {
@@ -71,8 +72,8 @@ bool check_button_debounced()
     {
       last_state = button_state;
 
-      // this implementation only cares for positive edges
-      if (button_state == LOW)
+      // this implementation only cares for negative edges
+      if (!button_state)
       {
         return true;
       }
@@ -97,12 +98,13 @@ void setup()
 
 void loop()
 {
-  if (check_button_debounced())
+  bool button_state = (digitalRead(PIN_BTN) == LOW); // inverted (pullup)
+  if (check_button_debounced(button_state))
   {
     uv_meter.next_mode();
   }
 
-  uv_meter.set_input_level(reader.get_rolling_avg());
+  uv_meter.read(reader.get_rolling_avg());
 
   delay(1); // ADC minimum
 }
