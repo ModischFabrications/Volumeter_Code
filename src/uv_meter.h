@@ -130,6 +130,8 @@ class UV_Meter
         pinMode(PIN_LEDS, OUTPUT);
 
         FastLED.addLeds<WS2812B, PIN_LEDS, GRB>(this->leds, N_LEDS);
+          // set powerlimit to 5v, 500mA (Fuse size)
+        FastLED.setMaxPowerInVoltsAndMilliamps(5,500); 
     }
 
     /**
