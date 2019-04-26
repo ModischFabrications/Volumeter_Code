@@ -30,13 +30,13 @@ class UV_Meter
      * blink a bit to show power is connected
      * (current implementation scrolls bar)
      * */
-    void hello_power()
+    void hello_power(uint16_t t_animation_ms)
     {
         for (uint8_t i = 0; i < N_LEDS; i++)
         {
             leds[i] = CRGB::White;
             FastLED.show();
-            delay(1000 / N_LEDS); // 1 second for whole bar
+            delay(t_animation_ms / N_LEDS); // 1 second for whole bar
             leds[i] = CRGB::Black;
         }
     }
@@ -129,7 +129,7 @@ class UV_Meter
     {
         pinMode(PIN_LEDS, OUTPUT);
 
-        FastLED.addLeds<WS2812B, PIN_LEDS, RGB>(this->leds, N_LEDS);
+        FastLED.addLeds<WS2812B, PIN_LEDS, GRB>(this->leds, N_LEDS);
     }
 
     /**
@@ -139,8 +139,8 @@ class UV_Meter
      * */
     void startup()
     {
-        // show first to decouple from settings
-        hello_power();
+        // show first to decouple from settings, 2 seconds
+        hello_power(2 * 1000);
 
         User_Settings persistent_settings = load_settings();
         apply_settings(persistent_settings);

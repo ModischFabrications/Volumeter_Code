@@ -41,7 +41,7 @@ const uint8_t N_READINGS = 30;
 const uint16_t T_DEBOUNCE_MS = 50;
 
 UV_Meter<PIN_LEDS, N_LEDS> uv_meter(DELAY_TO_SAVE_MS, N_THRESHOLD_YELLOW, N_THRESHOLD_RED);
-
+ 
 Smoothed_Reader<uint8_t, N_READINGS> reader;
 
 // --- functions
