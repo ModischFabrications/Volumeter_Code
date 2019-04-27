@@ -95,8 +95,8 @@ class UV_Meter
     /**
      * write to LED, depends on internal state
      * 
-     * TODO: define colors and levels as parameters
-     * TODO: gradients?
+     * TODO: gradients? `fill_gradient` in two segments? `blend`
+     * fade last LED? prevent jumping (value is decimals after division)
      * 
      * */
     void display_level(uint8_t input_level)
