@@ -20,19 +20,11 @@ but why? Save your time, it's like 10ct.
 
 // --- statics, constants & defines
 
-#define PIN_LEDS 1
-/* 
-PIN 7 is the only hardware interrupt on ATTiny85 (INT0)
-but ISRs are overkill in this case and are ignored
-`attachInterrupt(0, wakeUpFunction, LOW);`
-*/
-
+const uint8_t PIN_LEDS = 1;
 const uint8_t PIN_BTN = 2;
 const uint8_t PIN_MIC = 4;
 
-const uint8_t N_LEDS = 14;
-const uint8_t N_THRESHOLD_YELLOW = (N_LEDS * 0.5);
-const uint8_t N_THRESHOLD_RED = (N_LEDS * 0.8);
+const uint8_t N_LEDS = 12;
 
 const uint16_t DELAY_TO_SAVE_MS = (5 * 1000);
 
@@ -40,8 +32,8 @@ const uint8_t N_READINGS = 30;
 
 const uint16_t T_DEBOUNCE_MS = 50;
 
-UV_Meter<PIN_LEDS, N_LEDS> uv_meter(DELAY_TO_SAVE_MS, N_THRESHOLD_YELLOW, N_THRESHOLD_RED);
- 
+UV_Meter<PIN_LEDS, N_LEDS> uv_meter(DELAY_TO_SAVE_MS);
+
 Smoothed_Reader<uint8_t, N_READINGS> reader;
 
 // --- functions
@@ -93,7 +85,7 @@ bool waveform_to_intensity(uint8_t raw_waveform)
           |           \
     0V    |            ----
           ___________________
-  */ 
+  */
 
   // 17 - 127 = -110 -> 110/255 = 0.43
 

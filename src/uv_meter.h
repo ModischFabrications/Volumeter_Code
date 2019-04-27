@@ -6,6 +6,14 @@
 #include "settings.h"
 #include "persistence.h"
 
+// --- constants
+
+const bool DUALMODE = false;
+
+const CRGB C_OK = CRGB::White;
+const CRGB C_WARN = CRGB::Yellow;
+const CRGB C_CRIT = CRGB::Red;
+
 /**
  * delayed persistence, mode is written to storage after "delay_to_save".
  * display is driven by input-events, no internal timer usage.
@@ -18,8 +26,9 @@ class UV_Meter
     User_Settings settings;
 
     CRGB leds[N_LEDS];
-    const uint8_t n_threshold_yellow;
-    const uint8_t n_threshold_red;
+
+    const uint8_t N_THRESHOLD_WARN = (N_LEDS * 0.5);
+    const uint8_t N_THRESHOLD_CRIT = (N_LEDS * 0.8);
 
     // "delayed persistence"
     const uint16_t delay_to_save_ms; // max 1min to prevent dataloss
@@ -95,24 +104,27 @@ class UV_Meter
         // TODO: overflow?
         uint8_t n_on = (N_LEDS * input_level) / UINT8_MAX;
 
+        // set color for individual leds
         for (uint8_t i = 0; i < N_LEDS; i++)
         {
-            if (i > n_on) {
-                leds[i] = CRGB::Black;  // OFF
-            }
-            else if (i > n_threshold_red)
+            if (i > n_on)
             {
-                leds[i] = CRGB::Red;
+                leds[i] = CRGB::Black; // OFF
             }
-            else if (i < n_threshold_yellow)
+            else if (i > N_THRESHOLD_CRIT)
             {
-                leds[i] = CRGB::Yellow;
+                leds[i] = C_CRIT;
+            }
+            else if (i < N_THRESHOLD_WARN)
+            {
+                leds[i] = C_WARN;
             }
             else
             {
-                leds[i] = CRGB::Green;
+                leds[i] = C_OK;
             }
         }
+
         FastLED.show();
     }
 
@@ -121,17 +133,13 @@ class UV_Meter
      * construct everything thats's okay "outside of time"
      * 
      * */
-    UV_Meter(const uint8_t n_threshold_yellow,
-             const uint8_t n_threshold_red,
-             const uint16_t delay_to_save_ms) : n_threshold_yellow(n_threshold_yellow),
-                                                n_threshold_red(n_threshold_red),
-                                                delay_to_save_ms(delay_to_save_ms)
+    UV_Meter(const uint16_t delay_to_save_ms) : delay_to_save_ms(delay_to_save_ms)
     {
         pinMode(PIN_LEDS, OUTPUT);
 
         FastLED.addLeds<WS2812B, PIN_LEDS, GRB>(this->leds, N_LEDS);
-          // set powerlimit to 5v, 1000mA (Fuse size)
-        FastLED.setMaxPowerInVoltsAndMilliamps(5,1000); 
+        // set powerlimit to 5v, 1000mA (Fuse size)
+        FastLED.setMaxPowerInVoltsAndMilliamps(5, 1000);
     }
 
     /**
@@ -184,22 +192,25 @@ class UV_Meter
             return;
         }
 
-        /* -- test if mode is actually missed, better usability
-        // can't increase brightness, switch to next mode
-        new_settings.brightness = USER_BRIGHTNESS::LOW_BR;
-
-        if (this->settings.mode == USER_MODE::BAR){
-            new_settings.mode = USER_MODE::DOT;
-            apply_settings(new_settings);
-            return;
-        }
-        else if (this->settings.mode == USER_MODE::DOT)
+        // test if mode is actually missed, better usability
+        if (DUALMODE)
         {
-            new_settings.mode = USER_MODE::OFF;
-            apply_settings(new_settings);
-            return;
+            // can't increase brightness, switch to next mode
+            new_settings.brightness = USER_BRIGHTNESS::LOW_BR;
+
+            if (this->settings.mode == USER_MODE::BAR)
+            {
+                new_settings.mode = USER_MODE::DOT;
+                apply_settings(new_settings);
+                return;
+            }
+            else if (this->settings.mode == USER_MODE::DOT)
+            {
+                new_settings.mode = USER_MODE::OFF;
+                apply_settings(new_settings);
+                return;
+            }
         }
-        */
 
         // turn off if nothing else was right
         new_settings.mode = USER_MODE::OFF;
