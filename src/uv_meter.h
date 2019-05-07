@@ -9,6 +9,7 @@
 // --- constants
 
 const bool VERBOSE = true;
+const uint16_t delay_verbose = (1 * 1000);
 
 const bool DUALMODE = false;
 
@@ -30,7 +31,7 @@ const CRGB C_CRIT = CRGB::Red;
 template <uint8_t PIN_LEDS, uint16_t N_LEDS>
 class UV_Meter
 {
-  private:
+private:
     User_Settings settings;
 
     CRGB leds[N_LEDS];
@@ -42,7 +43,9 @@ class UV_Meter
     // "delayed persistence"
     const uint16_t delay_to_save_ms; // max 1min to prevent dataloss
     typedef unsigned long TIMESTAMP;
-    TIMESTAMP next_checkpoint = 0;
+    TIMESTAMP t_next_savepoint = 0;
+
+    TIMESTAMP t_lock_output_until = 0;
 
     /**
      * blink a bit to show power is connected
@@ -72,6 +75,8 @@ class UV_Meter
         if (new_settings.brightness != this->settings.brightness)
         {
             FastLED.setBrightness(settings.brightness);
+            // show changes
+            FastLED.show();
         }
 
         // most changes are done at runtime depending on saved settings
@@ -80,15 +85,10 @@ class UV_Meter
             // TODO is there anything to do here? Maybe turn off LEDs?
         }
 
-        if (VERBOSE)
-        {
-            // reset is happening on next reading(display_level)
-            fill_solid(this->leds, N_LEDS, CRGB::White);
-            FastLED.show();
-        }
+
 
         // set "moving" timer to save as soon as user is done
-        this->next_checkpoint = (millis() + delay_to_save_ms);
+        this->t_next_savepoint = (millis() + delay_to_save_ms);
 
         // reset for new run
         this->settings = new_settings;
@@ -101,10 +101,10 @@ class UV_Meter
      * */
     void try_save_checkpoint()
     {
-        if (this->next_checkpoint != 0 && millis() >= this->next_checkpoint)
+        if (this->t_next_savepoint != 0 && millis() >= this->t_next_savepoint)
         {
             save_settings(this->settings);
-            this->next_checkpoint = 0;
+            this->t_next_savepoint = 0;
         }
     }
 
@@ -117,7 +117,22 @@ class UV_Meter
      * */
     void display_level(uint8_t input_level)
     {
-        // TODO: overflow?
+        // was set previously
+        if (this->t_lock_output_until != 0)
+        {
+            if (millis() <= this->t_lock_output_until)
+            {
+                // overriding output is forbidden now
+                return;
+            }
+            else    // reached only once per lock
+            {
+                // reset to prevent locking again when overflowing 
+                this->t_lock_output_until = 0;
+            }
+        }
+
+        // TODO: is this safe with overflowing values (> 1 day)?
         uint8_t n_on = (N_LEDS * input_level) / UINT8_MAX;
 
         // set color for individual leds
@@ -145,7 +160,7 @@ class UV_Meter
         FastLED.show();
     }
 
-  public:
+public:
     /**
      * do everything thats's okay "outside of time"
      * 
@@ -180,6 +195,14 @@ class UV_Meter
      * */
     void next_mode()
     {
+        if (VERBOSE)
+        {
+            // reset is happening on next reading(display_level)
+            fill_solid(this->leds, N_LEDS, CRGB::White);
+            FastLED.show();
+            this->t_lock_output_until = (millis() + delay_verbose);
+        }
+
         User_Settings new_settings;
 
         // turn back on

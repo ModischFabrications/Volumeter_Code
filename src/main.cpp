@@ -118,6 +118,7 @@ void loop()
   }
 
   // this could be scaled (and parallelised!) by AVR register magic
+  // this will block until ADC was read, which could take a while
   uint16_t raw_input = analogRead(PIN_MIC); // 10 bit ADC on ATTiny85
   uint8_t scaled_input = map(raw_input, 0, 1023, 0, 255);
   uint8_t intensity = waveform_to_intensity(scaled_input);
@@ -125,5 +126,5 @@ void loop()
   reader.read(intensity);
   uv_meter.read(reader.get_rolling_avg());
 
-  delay(1); // ADC minimum, could be even lower
+  delay(10); // FIXME: test delay
 }
