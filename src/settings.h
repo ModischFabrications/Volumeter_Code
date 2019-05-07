@@ -1,14 +1,14 @@
 #pragma once
 
-enum USER_MODE
+enum USER_MODE : uint8_t
 {
-  OFF,
+  OFF = 0,
   BAR,
   DOT
 };
 
 // directly used as brightness
-enum USER_BRIGHTNESS
+enum USER_BRIGHTNESS : uint8_t
 {
   LOW_BR = 15,
   MIDDLE_BR = 63,
