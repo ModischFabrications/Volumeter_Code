@@ -9,7 +9,7 @@
 // --- constants
 
 const bool VERBOSE = true;
-const uint16_t delay_verbose = (1 * 1000);
+const uint16_t delay_verbose_ms = (1 * 1000);
 
 const bool DUALMODE = false;
 
@@ -85,8 +85,6 @@ private:
             // TODO is there anything to do here? Maybe turn off LEDs?
         }
 
-
-
         // set "moving" timer to save as soon as user is done
         this->t_next_savepoint = (millis() + delay_to_save_ms);
 
@@ -125,9 +123,9 @@ private:
                 // overriding output is forbidden now
                 return;
             }
-            else    // reached only once per lock
+            else // reached only once per lock
             {
-                // reset to prevent locking again when overflowing 
+                // reset to prevent locking again when overflowing
                 this->t_lock_output_until = 0;
             }
         }
@@ -182,10 +180,31 @@ public:
     void startup()
     {
         // show first to decouple from settings, 2 seconds
-        hello_power(2 * 1000);
+        hello_power(1 * 1000);
 
         User_Settings persistent_settings = load_settings();
         apply_settings(persistent_settings);
+
+        if (VERBOSE)
+        {
+            flash(CRGB::White);
+        }
+    }
+
+    /**
+     * flash shortly to signal something.
+     * Designed for debug use only.
+     * 
+     * */
+    void flash(CRGB color, uint16_t min_duration = delay_verbose_ms)
+    {
+        // reset is happening on next reading(display_level)
+        fill_solid(this->leds, N_LEDS, color);
+        FastLED.show();
+
+        // This could actually delay() but it's not much more difficult
+        // to do it async and clean.
+        this->t_lock_output_until = (millis() + min_duration);
     }
 
     /**
@@ -197,10 +216,7 @@ public:
     {
         if (VERBOSE)
         {
-            // reset is happening on next reading(display_level)
-            fill_solid(this->leds, N_LEDS, CRGB::White);
-            FastLED.show();
-            this->t_lock_output_until = (millis() + delay_verbose);
+            flash(CRGB::Violet);
         }
 
         User_Settings new_settings;
@@ -271,4 +287,6 @@ public:
         // manage timings
         try_save_checkpoint();
     }
+
+    // TODO: tick()?
 };

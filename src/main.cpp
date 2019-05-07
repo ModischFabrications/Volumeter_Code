@@ -20,6 +20,8 @@ but why? Save your time, it's like 10ct.
 
 // --- statics, constants & defines
 
+const bool DEBUG = true;
+
 const uint8_t PIN_LEDS = 1;
 const uint8_t PIN_BTN = 2;
 const uint8_t PIN_MIC = 4;
@@ -126,5 +128,9 @@ void loop()
   reader.read(intensity);
   uv_meter.read(reader.get_rolling_avg());
 
-  delay(10); // FIXME: test delay
+  if (DEBUG)
+  {
+    uv_meter.flash(CRGB::Green);
+    delay(500);
+  }
 }
