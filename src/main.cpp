@@ -117,6 +117,7 @@ void loop()
     uv_meter.next_mode();
   }
 
+  // this could be scaled (and parallelised!) by AVR register magic
   uint16_t raw_input = analogRead(PIN_MIC); // 10 bit ADC on ATTiny85
   uint8_t scaled_input = map(raw_input, 0, 1023, 0, 255);
   uint8_t intensity = waveform_to_intensity(scaled_input);

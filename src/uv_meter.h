@@ -8,6 +8,8 @@
 
 // --- constants
 
+const bool VERBOSE = true;
+
 const bool DUALMODE = false;
 
 const CRGB C_OK = CRGB::White;
@@ -18,6 +20,12 @@ const CRGB C_CRIT = CRGB::Red;
  * delayed persistence, mode is written to storage after "delay_to_save".
  * display is driven by input-events, no internal timer usage.
  * 
+ * Timing is done with each reading, as there is nothing that needs 
+ * a finer resolution. This makes `tick()` obsolete.
+ * 
+ * This implementation will try to ignore all mistakes as it
+ * can't really throw any exceptions as these crash the uC...
+ * 
  * */
 template <uint8_t PIN_LEDS, uint16_t N_LEDS>
 class UV_Meter
@@ -27,6 +35,7 @@ class UV_Meter
 
     CRGB leds[N_LEDS];
 
+    // can't be global constants because of N_LEDS
     const uint8_t N_THRESHOLD_WARN = (N_LEDS * 0.5);
     const uint8_t N_THRESHOLD_CRIT = (N_LEDS * 0.8);
 
@@ -71,6 +80,13 @@ class UV_Meter
             // TODO is there anything to do here? Maybe turn off LEDs?
         }
 
+        if (VERBOSE)
+        {
+            // reset is happening on next reading(display_level)
+            fill_solid(this->leds, N_LEDS, CRGB::White);
+            FastLED.show();
+        }
+
         // set "moving" timer to save as soon as user is done
         this->next_checkpoint = (millis() + delay_to_save_ms);
 
@@ -93,7 +109,7 @@ class UV_Meter
     }
 
     /**
-     * write to LED, depends on internal state
+     * write level to LEDs according to the selected mode
      * 
      * TODO: gradients? `fill_gradient` in two segments? `blend`
      * fade last LED? prevent jumping (value is decimals after division)
@@ -105,6 +121,7 @@ class UV_Meter
         uint8_t n_on = (N_LEDS * input_level) / UINT8_MAX;
 
         // set color for individual leds
+        // TODO: implement dot mode
         for (uint8_t i = 0; i < N_LEDS; i++)
         {
             if (i > n_on)
@@ -130,7 +147,7 @@ class UV_Meter
 
   public:
     /**
-     * construct everything thats's okay "outside of time"
+     * do everything thats's okay "outside of time"
      * 
      * */
     UV_Meter(const uint16_t delay_to_save_ms) : delay_to_save_ms(delay_to_save_ms)
@@ -143,7 +160,7 @@ class UV_Meter
     }
 
     /**
-     * Call to start when everything is ready
+     * Load settings and show readiness. 
      * 
      * loads settings from persistent storage
      * */
