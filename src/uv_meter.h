@@ -9,7 +9,7 @@
 // --- constants
 
 const bool VERBOSE = true;
-const uint16_t delay_verbose_ms = (1 * 1000);
+const uint16_t delay_verbose_ms = (1 * 500);
 
 const bool DUALMODE = false;
 
@@ -182,8 +182,9 @@ public:
         // show first to decouple from settings, 2 seconds
         hello_power(1 * 1000);
 
-        User_Settings persistent_settings = load_settings();
-        apply_settings(persistent_settings);
+        // FIXME: this is broken
+        //User_Settings persistent_settings = load_settings();
+        //apply_settings(persistent_settings);
 
         if (VERBOSE)
         {
@@ -198,13 +199,28 @@ public:
      * */
     void flash(CRGB color, uint16_t min_duration = delay_verbose_ms)
     {
-        // reset is happening on next reading(display_level)
+        // decrease to prevent burning out your eyes while debugging
+        uint8_t prev_brightness = FastLED.getBrightness();
+        FastLED.setBrightness(32);
+
         fill_solid(this->leds, N_LEDS, color);
         FastLED.show();
 
         // This could actually delay() but it's not much more difficult
         // to do it async and clean.
-        this->t_lock_output_until = (millis() + min_duration);
+        // this->t_lock_output_until = (millis() + min_duration);
+
+        delay(min_duration);
+
+        // reset everything possible
+        FastLED.setBrightness(prev_brightness);
+        fill_solid(this->leds, N_LEDS, CRGB::Black);    // restore previous?
+        FastLED.show();
+
+        // make sure that OFF is visible in every situation
+        delay(min_duration/4);
+
+        // full reset is happening on next reading(display_level)
     }
 
     /**
