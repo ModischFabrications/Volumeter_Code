@@ -116,6 +116,10 @@ void loop()
   bool button_state = (digitalRead(PIN_BTN) == LOW); // inverted (pullup)
   if (check_button_debounced(button_state))
   {
+    if (DEBUG)
+    {
+      uv_meter.flash(CRGB::Blue, 500);
+    }
     uv_meter.next_mode();
   }
 
@@ -130,7 +134,6 @@ void loop()
 
   if (DEBUG)
   {
-    uv_meter.flash(CRGB::Green);
-    delay(500);
+    uv_meter.flash(CRGB::DarkGreen, 100);
   }
 }
