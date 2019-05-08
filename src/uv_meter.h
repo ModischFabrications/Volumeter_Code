@@ -18,14 +18,18 @@ const CRGB C_WARN = CRGB::Yellow;
 const CRGB C_CRIT = CRGB::Red;
 
 /**
+ * Display the current input value on connected RGB-LEDs. 
+ * Using MODE::DOT saves energy and is less irritating, 
+ * using MODE::BAR will be more intuitive with color + amount.
+ * 
  * delayed persistence, mode is written to storage after "delay_to_save".
  * display is driven by input-events, no internal timer usage.
  * 
  * Timing is done with each reading, as there is nothing that needs 
  * a finer resolution. This makes `tick()` obsolete.
  * 
- * This implementation will try to ignore all mistakes as it
- * can't really throw any exceptions as these crash the uC...
+ * This implementation will try to ignore all mistakes. It can't 
+ * really throw any exceptions as these would crash this device.
  * 
  * */
 template <uint8_t PIN_LEDS, uint16_t N_LEDS>

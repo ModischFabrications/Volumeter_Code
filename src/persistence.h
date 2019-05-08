@@ -14,15 +14,15 @@
 #define EEPROM_VERSION_ADDR 12
 #define EEPROM_SETTINGS_ADDR 20
 
-// change with each design iteration to prevent EEPROM corruption
+// change with each design iteration to prevent EEPROM inconsistency
 // the chance that a random combination is a match is very low
 const uint8_t version = 2;
 
 // -----------
 
 /**
- * save mode to EEPROM for persistent storage
- * 
+ * save settings to EEPROM for persistent storage
+ * TODO: check if convenience features actually use 2 bytes as before
  * */
 void save_settings(Settings settings)
 {
@@ -30,6 +30,10 @@ void save_settings(Settings settings)
   EEPROM.put(EEPROM_SETTINGS_ADDR, settings);
 }
 
+/**
+ * load settings from EEPROM, this will reset and return default values for
+ * corrupted, outdated or missing settings.
+ * */
 Settings load_settings()
 {
   uint8_t saved_version;
@@ -37,8 +41,6 @@ Settings load_settings()
 
   if (saved_version != version)
   {
-    // missing, corrupted or outdated, needs to be reset
-
     // save new settings, updates version
     Settings defaults = {Settings::MODE::BAR, Settings::BRIGHTNESS::MIDDLE_BR};
     save_settings(defaults);
