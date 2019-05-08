@@ -32,7 +32,7 @@ template <uint8_t PIN_LEDS, uint16_t N_LEDS>
 class UV_Meter
 {
 private:
-    User_Settings settings;
+    Settings settings;
 
     CRGB leds[N_LEDS];
 
@@ -66,7 +66,7 @@ private:
      * update brightness, change current mode,
      * update persistence timer
      * */
-    void apply_settings(User_Settings &new_settings)
+    void apply_settings(Settings &new_settings)
     {
         // no need to change anything
         if (this->settings == new_settings)
@@ -183,7 +183,7 @@ public:
         hello_power(1 * 1000);
 
         // FIXME: this is broken
-        //User_Settings persistent_settings = load_settings();
+        //Settings persistent_settings = load_settings();
         //apply_settings(persistent_settings);
 
         if (VERBOSE)
@@ -235,14 +235,14 @@ public:
             flash(CRGB::Violet);
         }
 
-        User_Settings new_settings;
+        Settings new_settings;
 
         // turn back on
-        if (this->settings.mode == OFF)
+        if (this->settings.mode == Settings::MODE::OFF)
         {
             // lowest for all
-            new_settings.mode = USER_MODE::BAR;
-            new_settings.brightness = USER_BRIGHTNESS::LOW_BR;
+            new_settings.mode = Settings::MODE::BAR;
+            new_settings.brightness = Settings::BRIGHTNESS::LOW_BR;
             apply_settings(new_settings);
             return;
         }
@@ -251,15 +251,15 @@ public:
         new_settings = this->settings;
 
         // try switching brightness first
-        if (this->settings.brightness == LOW_BR)
+        if (this->settings.brightness == Settings::BRIGHTNESS::LOW_BR)
         {
-            new_settings.brightness = USER_BRIGHTNESS::MIDDLE_BR;
+            new_settings.brightness = Settings::BRIGHTNESS::MIDDLE_BR;
             apply_settings(new_settings);
             return;
         }
-        else if (this->settings.brightness == MIDDLE_BR)
+        else if (this->settings.brightness == Settings::BRIGHTNESS::MIDDLE_BR)
         {
-            new_settings.brightness = USER_BRIGHTNESS::HIGH_BR;
+            new_settings.brightness = Settings::BRIGHTNESS::HIGH_BR;
             apply_settings(new_settings);
             return;
         }
@@ -268,24 +268,24 @@ public:
         if (DUALMODE)
         {
             // can't increase brightness, switch to next mode
-            new_settings.brightness = USER_BRIGHTNESS::LOW_BR;
+            new_settings.brightness = Settings::BRIGHTNESS::LOW_BR;
 
-            if (this->settings.mode == USER_MODE::BAR)
+            if (this->settings.mode == Settings::MODE::BAR)
             {
-                new_settings.mode = USER_MODE::DOT;
+                new_settings.mode = Settings::MODE::DOT;
                 apply_settings(new_settings);
                 return;
             }
-            else if (this->settings.mode == USER_MODE::DOT)
+            else if (this->settings.mode == Settings::MODE::DOT)
             {
-                new_settings.mode = USER_MODE::OFF;
+                new_settings.mode = Settings::MODE::OFF;
                 apply_settings(new_settings);
                 return;
             }
         }
 
         // turn off if nothing else was right
-        new_settings.mode = USER_MODE::OFF;
+        new_settings.mode = Settings::MODE::OFF;
         apply_settings(new_settings);
         return;
     }
