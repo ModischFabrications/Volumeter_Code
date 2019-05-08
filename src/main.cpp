@@ -6,6 +6,7 @@
 // private, local
 #include "uv_meter.h"
 #include "smoothed_reader.h"
+#include "debouncer.h"
 
 /*------------Notes-----------*\
 Credits: Modisch Fabrications
@@ -37,44 +38,9 @@ const uint16_t T_DEBOUNCE_MS = 50;
 UV_Meter<PIN_LEDS, N_LEDS> uv_meter(DELAY_TO_SAVE_MS);
 
 Smoothed_Reader<uint8_t, N_READINGS> reader;
+Debouncer debouncer;
 
 // --- functions
-
-bool check_button_debounced(bool button_state)
-{
-  // this function will not trigger for the first
-  // flank but for the "last", which should be stable
-
-  static unsigned long last_debounce = 0;
-  static bool last_state = true;
-
-  unsigned long now = millis();
-
-  if (button_state != last_state)
-  {
-    // recent change means it's still bouncing or somebody clicked
-    last_debounce = now;
-    return false;
-  }
-
-  if ((now - last_debounce) > T_DEBOUNCE_MS)
-  {
-    // value is old enough to be stable
-
-    // check if a real change has occured
-    if (button_state != last_state)
-    {
-      last_state = button_state;
-
-      // this implementation only cares for negative edges
-      if (!button_state)
-      {
-        return true;
-      }
-    }
-  }
-  return false;
-}
 
 bool waveform_to_intensity(uint8_t raw_waveform)
 {
@@ -113,8 +79,8 @@ void setup()
 
 void loop()
 {
-  bool button_state = (digitalRead(PIN_BTN) == LOW); // inverted (pullup)
-  if (check_button_debounced(button_state))
+  bool reading = (digitalRead(PIN_BTN) == LOW); // inverted (pullup)
+  if (debouncer.read(reading))
   {
     if (DEBUG)
     {
