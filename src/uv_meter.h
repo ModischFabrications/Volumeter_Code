@@ -17,8 +17,6 @@ const CRGB C_CRIT = CRGB::Red;
 
 /**
  * Display the current input value on connected RGB-LEDs. 
- * Using MODE::DOT saves energy and is less irritating, 
- * using MODE::BAR will be more intuitive with color + amount.
  * 
  * delayed persistence, mode is written to storage after "delay_to_save".
  * display is driven by input-events, no internal timer usage.
@@ -29,6 +27,10 @@ const CRGB C_CRIT = CRGB::Red;
  * This implementation will try to ignore all mistakes. It can't 
  * really throw any exceptions as these would crash this device.
  * 
+ * VERBOSE:
+ * - sweep on start
+ * - blink green with mode change
+ * - blink green twice to confirm selection
  * */
 
 template <uint8_t PIN_LEDS, uint16_t N_LEDS>
@@ -49,8 +51,7 @@ private:
     TIMESTAMP t_next_savepoint = 0;
 
     /**
-     * blink a bit to show power is connected
-     * (current implementation scrolls bar)
+     * scroll bar to show power is connected and all LEDs work
      * */
     void hello_power(uint16_t t_animation_ms)
     {
@@ -64,8 +65,7 @@ private:
     }
 
     /**
-     * update brightness, change current mode,
-     * update persistence timer
+     * update brightness, update persistence timer
      * */
     void apply_settings(Settings &new_settings, bool persistent = true)
     {
@@ -118,7 +118,6 @@ private:
      * 
      * TODO: gradients? `fill_gradient` in two segments? `blend`
      * fade last LED? prevent jumping (value is decimals after division)
-     * 
      * */
     void display_level(uint8_t input_level)
     {
@@ -151,7 +150,6 @@ private:
 public:
     /**
      * do everything thats's okay "outside of time"
-     * 
      * */
     UV_Meter(const uint16_t delay_to_save_ms, uint32_t max_milliamps = 1000) : delay_to_save_ms(delay_to_save_ms)
     {
@@ -181,8 +179,7 @@ public:
 
     /**
      * flash shortly to signal something.
-     * Designed for debug use only.
-     * 
+     * Designed for debug use.
      * */
     void flash(CRGB color, uint16_t duration = t_default_flash_duration)
     {
@@ -211,9 +208,7 @@ public:
     }
 
     /**
-     * cycle modes
-     * 
-     * TODO: not DRY
+     * cycle brightness
      * */
     void next_mode()
     {
@@ -246,13 +241,12 @@ public:
     }
 
     /**
-     * call repeatedly from main loop to animate
-     * 
-     * (will also manage timings in secret)
+     * call repeatedly from main loop to animate, manage background-timings
      * */
     void read(uint8_t level)
     {
         // no old levels needed
+
         display_level(level);
 
         // manage timings
