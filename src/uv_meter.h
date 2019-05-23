@@ -97,6 +97,7 @@ private:
      * */
     void try_save_checkpoint()
     {
+        // TODO: is this safe with overflowing values (> 1 day)?
         if (this->t_next_savepoint != 0 && millis() >= this->t_next_savepoint)
         {
             save_settings(this->settings);
@@ -121,7 +122,6 @@ private:
      * */
     void display_level(uint8_t input_level)
     {
-        // TODO: is this safe with overflowing values (> 1 day)?
         uint8_t n_on = (N_LEDS * input_level) / UINT8_MAX;
 
         // set color for individual leds
@@ -169,16 +169,14 @@ public:
      * */
     void startup()
     {
-        // show first to decouple from settings, 2 seconds
-        hello_power(1 * 1000);
+        if (VERBOSE)
+        {
+            // show first to decouple from settings
+            hello_power(1 * 1000);
+        }
 
         Settings persistent_settings = load_settings();
         apply_settings(persistent_settings, false); // no need to save back
-
-        if (VERBOSE)
-        {
-            flash(CRGB::White);
-        }
     }
 
     /**
@@ -209,7 +207,7 @@ public:
         // make sure that OFF is visible in every situation
         delay(duration / 4);
 
-        // full reset is happening on next reading(display_level)
+        // full reset with values is happening on next reading(display_level)
     }
 
     /**
@@ -261,5 +259,5 @@ public:
         try_save_checkpoint();
     }
 
-    // TODO: tick()?
+    // tick()? -> overkill for uncritical checkpoints
 };
