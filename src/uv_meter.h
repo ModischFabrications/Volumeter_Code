@@ -116,6 +116,7 @@ private:
      * TODO: gradients? `fill_gradient` in two segments? `blend`
      * fade last LED? prevent jumping (value is decimals after division)
      * 
+     * FIXME: this was implemented without modes, extend if still needed
      * */
     void display_level(uint8_t input_level)
     {
