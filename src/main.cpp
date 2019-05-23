@@ -11,11 +11,6 @@
 /*------------Notes-----------*\
 Credits: Modisch Fabrications
 
-Testing should be possible on the digispark, as it has an ATTiny85 onboard. 
-Make sure to exclude Pin 3 and 4 as these are used for USB.
-
-Using an ATTiny45 might be possible if you shave of a few bytes somewhere, 
-but why? Save your time, it's like 10ct.
 
 \*----------------------------*/
 
@@ -33,8 +28,6 @@ const uint16_t DELAY_TO_SAVE_MS = (5 * 1000);
 
 const uint8_t N_READINGS = 60;
 const uint8_t N_MAXIMA = 100;
-
-const uint16_t T_DEBOUNCE_MS = 50;
 
 UV_Meter<PIN_LEDS, N_LEDS> uv_meter(DELAY_TO_SAVE_MS);
 
