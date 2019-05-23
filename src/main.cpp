@@ -76,12 +76,8 @@ void setup()
 void loop()
 {
   bool reading = (digitalRead(PIN_BTN) == LOW); // inverted (pullup)
-  if (debouncer.read(reading))
+  if (debouncer.read(reading) == Debouncer::STATE::ST_RISING)
   {
-    if (DEBUG)
-    {
-      uv_meter.flash(CRGB::Blue, 500);
-    }
     uv_meter.next_mode();
   }
 
@@ -95,9 +91,4 @@ void loop()
   avg_max_reader.read(reader.get_rolling_avg());
   uint8_t final_value = map(avg_max_reader.get_rolling_max(), 0, 200, 0, 255);
   uv_meter.read(final_value);
-
-  if (DEBUG)
-  {
-    uv_meter.flash(CRGB::DarkGreen, 100);
-  }
 }

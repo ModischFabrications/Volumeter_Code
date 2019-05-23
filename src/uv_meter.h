@@ -9,7 +9,7 @@
 // --- constants
 
 const bool VERBOSE = true;
-const uint16_t t_default_flash_duration = (1 * 500);
+const uint16_t t_default_flash_duration = (1 * 100);
 
 const bool ENABLE_DOT_MODE = false;
 

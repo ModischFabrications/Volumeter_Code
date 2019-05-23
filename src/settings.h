@@ -12,8 +12,8 @@ struct Settings
   // directly used as brightness
   enum BRIGHTNESS : uint8_t
   {
-    LOW_BR = 15,
-    MIDDLE_BR = 63,
+    LOW_BR = 5,
+    MIDDLE_BR = 31,
     HIGH_BR = 255
   };
 
