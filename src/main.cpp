@@ -25,11 +25,12 @@ const uint8_t PIN_MIC = 4;
 const uint8_t N_LEDS = 12;
 
 const uint16_t DELAY_TO_SAVE_MS = (5 * 1000);
+const uint32_t MAX_MILLIAMPS = 500;
 
 const uint8_t N_READINGS = 60;
 const uint8_t N_MAXIMA = 100;
 
-UV_Meter<PIN_LEDS, N_LEDS> uv_meter(DELAY_TO_SAVE_MS);
+UV_Meter<PIN_LEDS, N_LEDS> uv_meter(DELAY_TO_SAVE_MS, MAX_MILLIAMPS);
 
 Smoothed_Reader<uint8_t, N_READINGS> reader;
 Smoothed_Reader<uint8_t, N_MAXIMA> avg_max_reader;

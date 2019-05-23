@@ -167,13 +167,13 @@ public:
      * do everything thats's okay "outside of time"
      * 
      * */
-    UV_Meter(const uint16_t delay_to_save_ms) : delay_to_save_ms(delay_to_save_ms)
+    UV_Meter(const uint16_t delay_to_save_ms, uint32_t max_milliamps=1000) : delay_to_save_ms(delay_to_save_ms)
     {
         pinMode(PIN_LEDS, OUTPUT);
 
         FastLED.addLeds<WS2812B, PIN_LEDS, GRB>(this->leds, N_LEDS);
         // set powerlimit to 5v, 1000mA (Fuse size)
-        FastLED.setMaxPowerInVoltsAndMilliamps(5, 1000);
+        FastLED.setMaxPowerInVoltsAndMilliamps(5, max_milliamps);
     }
 
     /**
