@@ -31,23 +31,28 @@ const uint8_t N_LEDS = 12;
 
 const uint16_t DELAY_TO_SAVE_MS = (5 * 1000);
 
-const uint8_t N_READINGS = 30;
+const uint8_t N_READINGS = 60;
+const uint8_t N_MAXIMA = 100;
 
 const uint16_t T_DEBOUNCE_MS = 50;
 
 UV_Meter<PIN_LEDS, N_LEDS> uv_meter(DELAY_TO_SAVE_MS);
 
 Smoothed_Reader<uint8_t, N_READINGS> reader;
+Smoothed_Reader<uint8_t, N_MAXIMA> avg_max_reader;
+
 Debouncer debouncer;
 
 // --- functions
 
-bool waveform_to_intensity(uint8_t raw_waveform)
+uint16_t waveform_to_amplitude(uint16_t raw_waveform)
 {
-  // MAX4466 has VCC/2 base level and rail-to-rail output
-  // UINT8_MAX (INT8_MAX) amplitudes
+  /*
+    MAX4466 has VCC/2 base level and rail-to-rail output
+    Input: 512 +/- 512
+    Output: 0..512
 
-  /* 5V   |    -----
+     5V   |    -----
           |   /     \
     2.5V  | --       -
           |           \
@@ -57,9 +62,7 @@ bool waveform_to_intensity(uint8_t raw_waveform)
 
   // 17 - 127 = -110 -> 110/255 = 0.43
 
-  uint8_t normalized_input = abs((int16_t)raw_waveform - INT8_MAX);
-
-  return normalized_input;
+  return abs((int16_t)raw_waveform - 512);
 }
 
 // --------------
@@ -69,7 +72,7 @@ void setup()
   // init hardware
 
   pinMode(PIN_BTN, INPUT_PULLUP);
-  pinMode(PIN_MIC, INPUT);
+  pinMode(PIN_MIC, INPUT_PULLUP);
 
   // init subcomponents
 
@@ -89,14 +92,16 @@ void loop()
     uv_meter.next_mode();
   }
 
-  // this could be scaled (and parallelised!) by AVR register magic
-  // this will block until ADC was read, which could take a while
-  uint16_t raw_input = analogRead(PIN_MIC); // 10 bit ADC on ATTiny85
-  uint8_t scaled_input = map(raw_input, 0, 1023, 0, 255);
-  uint8_t intensity = waveform_to_intensity(scaled_input);
+  // you could increase speed *a lot* by triggering ADC-read via a HW-timer 
+  // or manually at the start of each loop after reading it's buffer
+  uint16_t mic_reading = analogRead(PIN_MIC);  // 512 +/- 512
+  // rescale to stay inside defined boundaries
+  uint8_t scaled_amplitude = waveform_to_amplitude(mic_reading)/2;  // 0..255
 
-  reader.read(intensity);
-  uv_meter.read(reader.get_rolling_avg());
+  reader.read(scaled_amplitude);
+  avg_max_reader.read(reader.get_rolling_avg());
+  uint8_t final_value = map(avg_max_reader.get_rolling_max(), 0, 200, 0, 255);
+  uv_meter.read(final_value);
 
   if (DEBUG)
   {
