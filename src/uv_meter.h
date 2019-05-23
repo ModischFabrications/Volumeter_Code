@@ -11,8 +11,6 @@
 const bool VERBOSE = true;
 const uint16_t t_default_flash_duration = (1 * 100);
 
-const bool ENABLE_DOT_MODE = false;
-
 const CRGB C_OK = CRGB::White;
 const CRGB C_WARN = CRGB::Yellow;
 const CRGB C_CRIT = CRGB::Red;
@@ -81,12 +79,6 @@ private:
             FastLED.setBrightness(settings.brightness);
             // show changes
             FastLED.show();
-        }
-
-        // most changes are done at runtime depending on saved settings
-        if (new_settings.mode != this->settings.mode)
-        {
-            // TODO is there anything to do here? Maybe turn off LEDs?
         }
 
         // set "moving" timer to save as soon as user is done
@@ -201,7 +193,7 @@ public:
      * Designed for debug use only.
      * 
      * */
-    void flash(CRGB color, uint16_t min_duration = t_default_flash_duration)
+    void flash(CRGB color, uint16_t duration = t_default_flash_duration)
     {
         // decrease to prevent burning out your eyes while debugging
         uint8_t prev_brightness = FastLED.getBrightness();
@@ -212,9 +204,9 @@ public:
 
         // This could actually delay() but it's not much more difficult
         // to do it async and clean.
-        // this->t_lock_output_until = (millis() + min_duration);
+        // this->t_lock_output_until = (millis() + duration);
 
-        delay(min_duration);
+        delay(duration * 3/4);
 
         // reset everything possible
         FastLED.setBrightness(prev_brightness);
@@ -222,7 +214,7 @@ public:
         FastLED.show();
 
         // make sure that OFF is visible in every situation
-        delay(min_duration/4);
+        delay(duration/4);
 
         // full reset is happening on next reading(display_level)
     }
@@ -236,62 +228,30 @@ public:
     {
         if (VERBOSE)
         {
-            flash(CRGB::Violet);
+            flash(CRGB::DarkGreen);
         }
 
         Settings new_settings;
 
-        // turn back on
-        if (this->settings.mode == Settings::MODE::OFF)
-        {
-            // lowest for all
-            new_settings.mode = Settings::MODE::BAR;
-            new_settings.brightness = Settings::BRIGHTNESS::LOW_BR;
-            apply_settings(new_settings);
-            return;
-        }
-
-        // delta to original settings from here on
-        new_settings = this->settings;
-
         // try switching brightness first
         if (this->settings.brightness == Settings::BRIGHTNESS::LOW_BR)
         {
-            new_settings.brightness = Settings::BRIGHTNESS::MIDDLE_BR;
-            apply_settings(new_settings);
-            return;
+            new_settings = {Settings::BRIGHTNESS::MIDDLE_BR};
         }
         else if (this->settings.brightness == Settings::BRIGHTNESS::MIDDLE_BR)
         {
-            new_settings.brightness = Settings::BRIGHTNESS::HIGH_BR;
-            apply_settings(new_settings);
-            return;
+            new_settings = {Settings::BRIGHTNESS::HIGH_BR};
         }
-
-        // test if mode is actually missed, better usability
-        if (ENABLE_DOT_MODE)
+        else if (this->settings.brightness == Settings::BRIGHTNESS::HIGH_BR)
         {
-            // can't increase brightness, switch to next mode
-            new_settings.brightness = Settings::BRIGHTNESS::LOW_BR;
-
-            if (this->settings.mode == Settings::MODE::BAR)
-            {
-                new_settings.mode = Settings::MODE::DOT;
-                apply_settings(new_settings);
-                return;
-            }
-            else if (this->settings.mode == Settings::MODE::DOT)
-            {
-                new_settings.mode = Settings::MODE::OFF;
-                apply_settings(new_settings);
-                return;
-            }
+            new_settings = {Settings::BRIGHTNESS::ULTRA_BR};
         }
+        else if (this->settings.brightness == Settings::BRIGHTNESS::ULTRA_BR)
+        {
+            new_settings = {Settings::BRIGHTNESS::LOW_BR};
+        }       
 
-        // turn off if nothing else was right
-        new_settings.mode = Settings::MODE::OFF;
         apply_settings(new_settings);
-        return;
     }
 
     /**

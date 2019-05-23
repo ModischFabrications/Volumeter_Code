@@ -42,7 +42,7 @@ Settings load_settings()
   if (saved_version != version)
   {
     // save new settings, updates version
-    Settings defaults = {Settings::MODE::BAR, Settings::BRIGHTNESS::MIDDLE_BR};
+    Settings defaults = {Settings::BRIGHTNESS::MIDDLE_BR};
     save_settings(defaults);
 
     return defaults;
