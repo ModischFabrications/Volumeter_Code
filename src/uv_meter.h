@@ -9,9 +9,9 @@
 // --- constants
 
 const bool VERBOSE = true;
-const uint16_t delay_verbose_ms = (1 * 500);
+const uint16_t t_default_flash_duration = (1 * 500);
 
-const bool DUALMODE = false;
+const bool ENABLE_DOT_MODE = false;
 
 const CRGB C_OK = CRGB::White;
 const CRGB C_WARN = CRGB::Yellow;
@@ -201,7 +201,7 @@ public:
      * Designed for debug use only.
      * 
      * */
-    void flash(CRGB color, uint16_t min_duration = delay_verbose_ms)
+    void flash(CRGB color, uint16_t min_duration = t_default_flash_duration)
     {
         // decrease to prevent burning out your eyes while debugging
         uint8_t prev_brightness = FastLED.getBrightness();
@@ -269,7 +269,7 @@ public:
         }
 
         // test if mode is actually missed, better usability
-        if (DUALMODE)
+        if (ENABLE_DOT_MODE)
         {
             // can't increase brightness, switch to next mode
             new_settings.brightness = Settings::BRIGHTNESS::LOW_BR;
