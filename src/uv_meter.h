@@ -30,6 +30,7 @@ const CRGB C_CRIT = CRGB::Red;
  * really throw any exceptions as these would crash this device.
  * 
  * */
+
 template <uint8_t PIN_LEDS, uint16_t N_LEDS>
 class UV_Meter
 {
@@ -46,8 +47,6 @@ private:
     const uint16_t delay_to_save_ms; // max 1min to prevent dataloss
     typedef unsigned long TIMESTAMP;
     TIMESTAMP t_next_savepoint = 0;
-
-    TIMESTAMP t_lock_output_until = 0;
 
     /**
      * blink a bit to show power is connected
@@ -76,8 +75,8 @@ private:
 
         if (new_settings.brightness != this->settings.brightness)
         {
-            FastLED.setBrightness(settings.brightness);
-            // show changes
+            FastLED.setBrightness(new_settings.brightness);
+            // immediately show new brightness
             FastLED.show();
         }
 
@@ -103,7 +102,7 @@ private:
     }
 
     /**
-     * write level to LEDs according to the selected mode
+     * write level to LEDs, input_level is full range of type
      * 
      * TODO: gradients? `fill_gradient` in two segments? `blend`
      * fade last LED? prevent jumping (value is decimals after division)
@@ -111,26 +110,10 @@ private:
      * */
     void display_level(uint8_t input_level)
     {
-        // was set previously
-        if (this->t_lock_output_until != 0)
-        {
-            if (millis() <= this->t_lock_output_until)
-            {
-                // overriding output is forbidden now
-                return;
-            }
-            else // reached only once per lock
-            {
-                // reset to prevent locking again when overflowing
-                this->t_lock_output_until = 0;
-            }
-        }
-
         // TODO: is this safe with overflowing values (> 1 day)?
         uint8_t n_on = (N_LEDS * input_level) / UINT8_MAX;
 
         // set color for individual leds
-        // TODO: implement dot mode
         for (uint8_t i = 0; i < N_LEDS; i++)
         {
             if (i > n_on)
@@ -159,7 +142,7 @@ public:
      * do everything thats's okay "outside of time"
      * 
      * */
-    UV_Meter(const uint16_t delay_to_save_ms, uint32_t max_milliamps=1000) : delay_to_save_ms(delay_to_save_ms)
+    UV_Meter(const uint16_t delay_to_save_ms, uint32_t max_milliamps = 1000) : delay_to_save_ms(delay_to_save_ms)
     {
         pinMode(PIN_LEDS, OUTPUT);
 
@@ -206,15 +189,15 @@ public:
         // to do it async and clean.
         // this->t_lock_output_until = (millis() + duration);
 
-        delay(duration * 3/4);
+        delay(duration * 3 / 4);
 
         // reset everything possible
         FastLED.setBrightness(prev_brightness);
-        fill_solid(this->leds, N_LEDS, CRGB::Black);    // restore previous?
+        fill_solid(this->leds, N_LEDS, CRGB::Black); // restore previous?
         FastLED.show();
 
         // make sure that OFF is visible in every situation
-        delay(duration/4);
+        delay(duration / 4);
 
         // full reset is happening on next reading(display_level)
     }
@@ -249,7 +232,7 @@ public:
         else if (this->settings.brightness == Settings::BRIGHTNESS::ULTRA_BR)
         {
             new_settings = {Settings::BRIGHTNESS::LOW_BR};
-        }       
+        }
 
         apply_settings(new_settings);
     }
