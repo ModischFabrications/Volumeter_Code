@@ -67,7 +67,7 @@ private:
      * update brightness, change current mode,
      * update persistence timer
      * */
-    void apply_settings(Settings &new_settings)
+    void apply_settings(Settings &new_settings, bool persistent = true)
     {
         // no need to change anything
         if (this->settings == new_settings)
@@ -80,8 +80,11 @@ private:
             FastLED.show();
         }
 
-        // set "moving" timer to save as soon as user is done
-        this->t_next_savepoint = (millis() + delay_to_save_ms);
+        if (persistent)
+        {
+            // set "moving" timer to save as soon as user is done
+            this->t_next_savepoint = (millis() + delay_to_save_ms);
+        }
 
         // reset for new run
         this->settings = new_settings;
@@ -98,6 +101,14 @@ private:
         {
             save_settings(this->settings);
             this->t_next_savepoint = 0;
+
+            if (VERBOSE)
+            {
+                // once: button pressed
+                // twice: confirmed and saved
+                flash(CRGB::DarkGreen);
+                flash(CRGB::DarkGreen);
+            }
         }
     }
 
@@ -124,7 +135,7 @@ private:
             {
                 leds[i] = C_CRIT;
             }
-            else if (i < N_THRESHOLD_WARN)
+            else if (i > N_THRESHOLD_WARN)
             {
                 leds[i] = C_WARN;
             }
@@ -161,9 +172,8 @@ public:
         // show first to decouple from settings, 2 seconds
         hello_power(1 * 1000);
 
-        // FIXME: this is broken
-        //Settings persistent_settings = load_settings();
-        //apply_settings(persistent_settings);
+        Settings persistent_settings = load_settings();
+        apply_settings(persistent_settings, false); // no need to save back
 
         if (VERBOSE)
         {
