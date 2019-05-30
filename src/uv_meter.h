@@ -9,7 +9,7 @@
 // --- constants
 
 const bool VERBOSE = true;
-const uint16_t t_default_flash_duration = (1 * 100);
+const uint16_t t_default_flash_duration = (1 * 200);
 
 const CRGB C_OK = CRGB::White;
 const CRGB C_WARN = CRGB::Yellow;
@@ -42,8 +42,8 @@ private:
     CRGB leds[N_LEDS];
 
     // can't be global constants because of N_LEDS
-    const uint8_t N_THRESHOLD_WARN = (N_LEDS * 0.5);
-    const uint8_t N_THRESHOLD_CRIT = (N_LEDS * 0.8);
+    const uint8_t N_THRESHOLD_WARN = (N_LEDS * 1/3);
+    const uint8_t N_THRESHOLD_CRIT = (N_LEDS * 2/3);
 
     // "delayed persistence"
     const uint16_t delay_to_save_ms; // max 1min to prevent dataloss
@@ -126,15 +126,15 @@ private:
         // set color for individual leds
         for (uint8_t i = 0; i < N_LEDS; i++)
         {
-            if (i > n_on)
+            if (i >= n_on)
             {
                 leds[i] = CRGB::Black; // OFF
             }
-            else if (i > N_THRESHOLD_CRIT)
+            else if (i >= N_THRESHOLD_CRIT)
             {
                 leds[i] = C_CRIT;
             }
-            else if (i > N_THRESHOLD_WARN)
+            else if (i >= N_THRESHOLD_WARN)
             {
                 leds[i] = C_WARN;
             }
@@ -227,12 +227,12 @@ public:
         else if (this->settings.brightness == Settings::BRIGHTNESS::MIDDLE_BR)
         {
             new_settings = {Settings::BRIGHTNESS::HIGH_BR};
-        }
+        }/*
         else if (this->settings.brightness == Settings::BRIGHTNESS::HIGH_BR)
         {
             new_settings = {Settings::BRIGHTNESS::ULTRA_BR};
-        }
-        else if (this->settings.brightness == Settings::BRIGHTNESS::ULTRA_BR)
+        }*/
+        else
         {
             new_settings = {Settings::BRIGHTNESS::LOW_BR};
         }

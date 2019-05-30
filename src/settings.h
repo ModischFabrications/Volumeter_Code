@@ -9,7 +9,7 @@ struct Settings
     LOW_BR = 5,
     MIDDLE_BR = 31,
     HIGH_BR = 127,
-    ULTRA_BR = 255
+    //ULTRA_BR = 255
   };
 
   BRIGHTNESS brightness;
