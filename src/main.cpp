@@ -20,7 +20,7 @@ const bool DEBUG = true;
 
 const uint8_t PIN_LEDS = 1;
 const uint8_t PIN_BTN = 2;
-const uint8_t PIN_MIC = 4;
+const uint8_t PIN_MIC = A2;
 
 const uint8_t N_LEDS = 12;
 
@@ -90,6 +90,9 @@ void loop()
 
   reader.read(scaled_amplitude);
   avg_max_reader.read(reader.get_rolling_avg());
-  uint8_t final_value = map(avg_max_reader.get_rolling_max(), 0, 200, 0, 255);
+
+  uint8_t final_value = avg_max_reader.get_rolling_max();
+  // final_value = map(avg_max_reader.get_rolling_max(), 0, 200, 0, 255);
+
   uv_meter.read(final_value);
 }
