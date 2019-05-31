@@ -41,12 +41,8 @@ private:
 
     CRGB leds[N_LEDS];
 
-    // can't be global constants because of N_LEDS
-    const uint8_t N_THRESHOLD_WARN = (N_LEDS * 1/3);
-    const uint8_t N_THRESHOLD_CRIT = (N_LEDS * 2/3);
-
     // "delayed persistence"
-    const uint16_t delay_to_save_ms; // max 1min to prevent dataloss
+    const uint16_t delay_to_save_ms; // uint16_t = max 65s (to prevent dataloss)
     typedef unsigned long TIMESTAMP;
     TIMESTAMP t_next_savepoint = 0;
 
@@ -113,35 +109,56 @@ private:
         }
     }
 
+    uint8_t get_decimal_intensity(float value, uint8_t i)
+    {
+        uint8_t lower_bound = floor(value);
+        uint8_t upper_bound = ceil(value);
+        uint8_t decimals = fmod(value, 1) * UINT8_MAX; // fmod is % for floats
+
+        /*
+        x = 1.75:   0 = 255, 1 = 255, 2 = 0.75*255, 3 = 0
+        x = 1   :   0 = 255, 1 = 255, 2 = 0
+        */
+
+        // all LEDs lower than lower bound are 1, all higher than upper 0
+        if (i <= lower_bound)
+            return 255;
+        else if (i == upper_bound) // this will be skipped with real ints
+        {
+            // show decimals
+            return lerp8by8(0, 255, decimals);
+        }
+        else //if (i > upper_bound)
+            return 0;
+    }
+
     /**
-     * write level to LEDs, input_level is full range of type
+     * write level to LEDs, input_level is full range of uint8_t
      * 
-     * TODO: gradients? `fill_gradient` in two segments? `blend`
      * fade last LED? prevent jumping (value is decimals after division)
+     * 
+     * three way lerping, neighbouring pixels get value from distance
+     * 
+     * The color is determined by the position on the stripe and is independent 
+     * of the current input_level.
+     * 
+     * Only the amplitude is determined by the input level. 
+     * Decimals are shown as partial brightness of the last LED.
+     * 
      * */
     void display_level(uint8_t input_level)
     {
-        uint8_t n_on = (N_LEDS * input_level) / UINT8_MAX;
+        float n_on = (1.0f * N_LEDS * input_level) / UINT8_MAX;
 
-        // set color for individual leds
+        // three way lerp
+        fill_gradient_RGB(leds, N_LEDS, C_OK, C_WARN, C_CRIT);
+
+        // set intensity for individual leds
         for (uint8_t i = 0; i < N_LEDS; i++)
         {
-            if (i >= n_on)
-            {
-                leds[i] = CRGB::Black; // OFF
-            }
-            else if (i >= N_THRESHOLD_CRIT)
-            {
-                leds[i] = C_CRIT;
-            }
-            else if (i >= N_THRESHOLD_WARN)
-            {
-                leds[i] = C_WARN;
-            }
-            else
-            {
-                leds[i] = C_OK;
-            }
+            uint8_t current_intensity = get_decimal_intensity(n_on, i);
+            // scale by brightness, OFF should always be black
+            leds[i] *= current_intensity;
         }
 
         FastLED.show();
@@ -227,7 +244,7 @@ public:
         else if (this->settings.brightness == Settings::BRIGHTNESS::MIDDLE_BR)
         {
             new_settings = {Settings::BRIGHTNESS::HIGH_BR};
-        }/*
+        } /*
         else if (this->settings.brightness == Settings::BRIGHTNESS::HIGH_BR)
         {
             new_settings = {Settings::BRIGHTNESS::ULTRA_BR};
