@@ -109,26 +109,26 @@ private:
         }
     }
 
-    uint8_t get_decimal_intensity(float value, uint8_t i)
+    uint8_t decimals_to_intensity(float value, uint8_t i)
     {
         uint8_t lower_bound = floor(value);
         uint8_t upper_bound = ceil(value);
         uint8_t decimals = fmod(value, 1) * UINT8_MAX; // fmod is % for floats
 
         /*
-        x = 1.75:   0 = 255, 1 = 255, 2 = 0.75*255, 3 = 0
-        x = 1   :   0 = 255, 1 = 255, 2 = 0
+        x = 1.75:   0 = 255, 1 = 0.75*255, 3 = 0
+        x = 1   :   0 = 255, 1 = 0
         */
 
         // all LEDs lower than lower bound are 1, all higher than upper 0
-        if (i <= lower_bound)
+        if (i < lower_bound)
             return 255;
-        else if (i == upper_bound) // this will be skipped with real ints
+        else if (i == lower_bound) // this will be skipped with real ints
         {
-            // show decimals
-            return lerp8by8(0, 255, decimals);
+            uint8_t decimals = fmod(value, 1) * UINT8_MAX; // fmod is % for floats
+            return decimals;
         }
-        else //if (i > upper_bound)
+        else //if (i > lower_bound)
             return 0;
     }
 
@@ -148,7 +148,8 @@ private:
      * */
     void display_level(uint8_t input_level)
     {
-        float n_on = (1.0f * N_LEDS * input_level) / UINT8_MAX;
+        float relative_level = 1.0f * input_level / UINT8_MAX;
+        float n_on = (N_LEDS * relative_level);
 
         // three way lerp
         fill_gradient_RGB(leds, N_LEDS, C_OK, C_WARN, C_CRIT);
@@ -156,9 +157,10 @@ private:
         // set intensity for individual leds
         for (uint8_t i = 0; i < N_LEDS; i++)
         {
-            uint8_t current_intensity = get_decimal_intensity(n_on, i);
+            uint8_t current_intensity = decimals_to_intensity(n_on, i);
             // scale by brightness, OFF should always be black
-            leds[i] *= current_intensity;
+            // simple multiplication did not work, no idea why
+            leds[i].nscale8(current_intensity);
         }
 
         FastLED.show();
