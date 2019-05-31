@@ -11,7 +11,7 @@
 const bool VERBOSE = true;
 const uint16_t t_default_flash_duration = (1 * 200);
 
-const CRGB C_OK = CRGB::White;
+const CRGB C_OK = CRGB::Green;
 const CRGB C_WARN = CRGB::Yellow;
 const CRGB C_CRIT = CRGB::Red;
 
@@ -134,10 +134,6 @@ private:
     /**
      * write level to LEDs, input_level is full range of uint8_t
      * 
-     * fade last LED? prevent jumping (value is decimals after division)
-     * 
-     * three way lerping, neighbouring pixels get value from distance
-     * 
      * The color is determined by the position on the stripe and is independent 
      * of the current input_level.
      * 
@@ -196,7 +192,7 @@ public:
     }
 
     /**
-     * flash shortly to signal something.
+     * quick flash to signal something.
      * Designed for debug use.
      * */
     void flash(CRGB color, uint16_t duration = t_default_flash_duration)
@@ -220,7 +216,7 @@ public:
         FastLED.show();
 
         // make sure that OFF is visible in every situation
-        delay(duration / 4);
+        delay(duration * 1 / 4);
 
         // full reset with values is happening on next reading(display_level)
     }
