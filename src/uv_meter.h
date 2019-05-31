@@ -112,8 +112,6 @@ private:
     uint8_t decimals_to_intensity(float value, uint8_t i)
     {
         uint8_t lower_bound = floor(value);
-        uint8_t upper_bound = ceil(value);
-        uint8_t decimals = fmod(value, 1) * UINT8_MAX; // fmod is % for floats
 
         /*
         x = 1.75:   0 = 255, 1 = 0.75*255, 3 = 0
