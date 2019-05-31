@@ -59,6 +59,21 @@ uint16_t waveform_to_amplitude(uint16_t raw_waveform)
   return abs((int16_t)raw_waveform - 512);
 }
 
+uint8_t simple_avg(uint8_t new_value)
+{
+  static uint16_t last_value = 0;
+  
+  // rescale input to higher precision
+  uint16_t scaled_new = (new_value << 8);
+
+  // use uint16_t internally to keep high precision for small deltas
+  uint16_t current_value = last_value * 0.95 + 0.05 * scaled_new;
+  last_value = current_value;
+
+  // scale back to lower precision
+  return (current_value >> 8);
+}
+
 // --------------
 
 void setup()
@@ -88,11 +103,15 @@ void loop()
   // rescale to stay inside defined boundaries
   uint8_t scaled_amplitude = waveform_to_amplitude(mic_reading)/2;  // 0..255
 
+  uint8_t easy_avg = simple_avg(scaled_amplitude);
+
   reader.read(scaled_amplitude);
-  avg_max_reader.read(reader.get_rolling_avg());
+  uint8_t smoothed_amplitude = reader.get_rolling_avg();
+  avg_max_reader.read(smoothed_amplitude);
 
   uint8_t final_value = avg_max_reader.get_rolling_max();
   // final_value = map(avg_max_reader.get_rolling_max(), 0, 200, 0, 255);
 
-  uv_meter.read(final_value);
+  uv_meter.read(easy_avg);
+  FastLED.delay(1);
 }
