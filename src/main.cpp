@@ -17,6 +17,7 @@ Credits: Modisch Fabrications
 // --- statics, constants & defines
 
 const bool DEBUG = true;
+const bool USE_SERIAL = true;
 
 const uint8_t PIN_LEDS = 1;
 const uint8_t PIN_BTN = 2;
@@ -31,9 +32,6 @@ const uint8_t N_READINGS = 60;
 const uint8_t N_MAXIMA = 100;
 
 UV_Meter<PIN_LEDS, N_LEDS> uv_meter(DELAY_TO_SAVE_MS, MAX_MILLIAMPS);
-
-Smoothed_Reader<uint8_t, N_READINGS> reader;
-Smoothed_Reader<uint8_t, N_MAXIMA> avg_max_reader;
 
 Debouncer debouncer;
 
@@ -85,6 +83,11 @@ void setup()
 
   // init subcomponents
 
+  if (USE_SERIAL)
+  {
+    Serial.begin(115200);
+  }
+
   // all done
   uv_meter.startup();
 }
@@ -99,19 +102,24 @@ void loop()
 
   // you could increase speed *a lot* by triggering ADC-read via a HW-timer 
   // or manually at the start of each loop after reading it's buffer
-  uint16_t mic_reading = analogRead(PIN_MIC);  // 512 +/- 512
+  uint16_t mic_reading = analogRead(PIN_MIC); // 512 +/- 512
   // rescale to stay inside defined boundaries
-  uint8_t scaled_amplitude = waveform_to_amplitude(mic_reading)/2;  // 0..255
+  uint8_t scaled_amplitude = waveform_to_amplitude(mic_reading) / 2; // 0..255
 
   uint8_t easy_avg = simple_avg(scaled_amplitude);
 
-  reader.read(scaled_amplitude);
-  uint8_t smoothed_amplitude = reader.get_rolling_avg();
-  avg_max_reader.read(smoothed_amplitude);
-
-  uint8_t final_value = avg_max_reader.get_rolling_max();
-  // final_value = map(avg_max_reader.get_rolling_max(), 0, 200, 0, 255);
-
   uv_meter.read(easy_avg);
-  FastLED.delay(1);
+  FastLED.delay(10);
+
+  if (USE_SERIAL)
+  {
+    Serial.print(scaled_amplitude);
+    Serial.print(",");
+    Serial.print(easy_avg);
+    Serial.print(",");
+
+    Serial.println();
+
+    FastLED.delay(10);
+  }
 }
