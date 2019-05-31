@@ -114,7 +114,8 @@ private:
         uint8_t lower_bound = floor(value);
 
         /*
-        x = 1.75:   0 = 255, 1 = 0.75*255, 3 = 0
+        Remember that "i" is an index and "value" a number, always subtract 1
+        x = 1.75:   0 = 255, 1 = 0.75*255, 3 = 0  (one LED on, one at 3/4)
         x = 1   :   0 = 255, 1 = 0
         */
 
