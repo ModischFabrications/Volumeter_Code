@@ -27,7 +27,7 @@ const uint8_t N_LEDS = 12;
 const uint16_t DELAY_TO_SAVE_MS = (5 * 1000);
 const uint32_t MAX_MILLIAMPS = 500;
 
-const float ADJUSTMENT_FACTOR = 1.1f;
+const float ADJUSTMENT_FACTOR = 1.8f;
 
 UV_Meter<PIN_LEDS, N_LEDS> uv_meter(DELAY_TO_SAVE_MS, MAX_MILLIAMPS);
 
@@ -111,7 +111,10 @@ void loop()
   uint8_t amplitude = waveform_to_amplitude(mic_reading) / 2; // 0..255
   uint8_t average_amplitude = simple_avg(amplitude);
 
-  uv_meter.read(average_amplitude);
+  uint8_t scaled_average_amplitude = (ADJUSTMENT_FACTOR * average_amplitude);
+  // detect (and fix) overflow
+  if (scaled_average_amplitude < average_amplitude)
+    scaled_average_amplitude = UINT8_MAX;
 
   if (USE_SERIAL)
   {
@@ -119,11 +122,11 @@ void loop()
     Serial.print(",");
     Serial.print(average_amplitude);
     Serial.print(",");
-
+    Serial.print(scaled_average_amplitude);
     Serial.println();
-
-    FastLED.delay(10);
   }
 
-  FastLED.delay(10);  // keep a predictable execution time
+  uv_meter.read(scaled_average_amplitude);
+
+  FastLED.delay(10); // keep a predictable execution time
 }
