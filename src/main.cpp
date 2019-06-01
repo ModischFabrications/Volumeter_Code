@@ -15,8 +15,12 @@ Credits: Modisch Fabrications
 
 // --- statics, constants & defines
 
-const bool DEBUG = true;
+#ifdef ARDUINO_AVR_NANO
 const bool USE_SERIAL = true;
+#pragma message "Enabling Serial for Debug Prints"
+#else
+const bool USE_SERIAL = false;
+#endif
 
 const uint8_t PIN_LEDS = 1;
 const uint8_t PIN_BTN = 2;
