@@ -16,17 +16,21 @@ Credits: Modisch Fabrications
 // --- statics, constants & defines
 
 #ifdef ARDUINO_AVR_NANO
-const bool USE_SERIAL = true;
 #pragma message "Enabling Serial for Debug Prints"
+const bool USE_SERIAL = true;
+
+const uint8_t N_LEDS = 6;
+const uint8_t PIN_LEDS = 4;
+
 #else
 const bool USE_SERIAL = false;
-#endif
-
-const uint8_t PIN_LEDS = 1;
-const uint8_t PIN_BTN = 2;
-const uint8_t PIN_MIC = A2;
 
 const uint8_t N_LEDS = 12;
+const uint8_t PIN_LEDS = 1;
+#endif
+
+const uint8_t PIN_BTN = 2;
+const uint8_t PIN_MIC = A2;
 
 const uint16_t DELAY_TO_SAVE_MS = (5 * 1000);
 const uint32_t MAX_MILLIAMPS = 500;
@@ -68,7 +72,7 @@ uint16_t waveform_to_amplitude(uint16_t raw_waveform)
 uint8_t simple_avg(uint8_t new_value, float factor = 0.95f)
 {
   static uint16_t last_value = 0;
-  
+
   // rescale input to higher precision
   uint16_t scaled_new = (new_value << 8);
 
@@ -108,7 +112,7 @@ void loop()
     uv_meter.next_mode();
   }
 
-  // you could increase speed *a lot* by triggering ADC-read via a HW-timer 
+  // you could increase speed *a lot* by triggering ADC-read via a HW-timer
   // or manually at the start of each loop after reading it's buffer
   uint16_t mic_reading = analogRead(PIN_MIC); // 512 +/- 512
   // rescale to stay inside defined boundaries
