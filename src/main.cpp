@@ -5,7 +5,6 @@
 
 // private, local
 #include "uv_meter.h"
-#include "smoothed_reader.h"
 #include "debouncer.h"
 
 /*------------Notes-----------*\
@@ -28,8 +27,7 @@ const uint8_t N_LEDS = 12;
 const uint16_t DELAY_TO_SAVE_MS = (5 * 1000);
 const uint32_t MAX_MILLIAMPS = 500;
 
-const uint8_t N_READINGS = 60;
-const uint8_t N_MAXIMA = 100;
+const float ADJUSTMENT_FACTOR = 1.1f;
 
 UV_Meter<PIN_LEDS, N_LEDS> uv_meter(DELAY_TO_SAVE_MS, MAX_MILLIAMPS);
 
@@ -57,7 +55,13 @@ uint16_t waveform_to_amplitude(uint16_t raw_waveform)
   return abs((int16_t)raw_waveform - 512);
 }
 
-uint8_t simple_avg(uint8_t new_value)
+/**
+ * This is a simple and efficient trick to keep a rolling average.
+ * Keep in mind that this is coupled to the execution time, make sure 
+ * to keep it predictable.
+ * 
+ * */
+uint8_t simple_avg(uint8_t new_value, float factor = 0.95f)
 {
   static uint16_t last_value = 0;
   
@@ -65,7 +69,7 @@ uint8_t simple_avg(uint8_t new_value)
   uint16_t scaled_new = (new_value << 8);
 
   // use uint16_t internally to keep high precision for small deltas
-  uint16_t current_value = last_value * 0.95 + 0.05 * scaled_new;
+  uint16_t current_value = (last_value * factor) + ((1 - factor) * scaled_new);
   last_value = current_value;
 
   // scale back to lower precision
@@ -104,22 +108,22 @@ void loop()
   // or manually at the start of each loop after reading it's buffer
   uint16_t mic_reading = analogRead(PIN_MIC); // 512 +/- 512
   // rescale to stay inside defined boundaries
-  uint8_t scaled_amplitude = waveform_to_amplitude(mic_reading) / 2; // 0..255
+  uint8_t amplitude = waveform_to_amplitude(mic_reading) / 2; // 0..255
+  uint8_t average_amplitude = simple_avg(amplitude);
 
-  uint8_t easy_avg = simple_avg(scaled_amplitude);
-
-  uv_meter.read(easy_avg);
-  FastLED.delay(10);
+  uv_meter.read(average_amplitude);
 
   if (USE_SERIAL)
   {
-    Serial.print(scaled_amplitude);
+    Serial.print(amplitude);
     Serial.print(",");
-    Serial.print(easy_avg);
+    Serial.print(average_amplitude);
     Serial.print(",");
 
     Serial.println();
 
     FastLED.delay(10);
   }
+
+  FastLED.delay(10);  // keep a predictable execution time
 }
