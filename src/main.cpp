@@ -35,6 +35,8 @@ const uint8_t PIN_MIC = A2;
 const uint16_t DELAY_TO_SAVE_MS = (5 * 1000);
 const uint32_t MAX_MILLIAMPS = 500;
 
+// lower loop time reduces coupling but increases flickering
+// use a bigger capacitor if possible
 const uint8_t LOOPTIME_MS = 20;
 const float AVG_FACTOR = 0.90f;
 
@@ -118,6 +120,7 @@ void loop()
 
   // you could increase speed *a lot* by triggering ADC-read via a HW-timer
   // or manually at the start of each loop after reading it's buffer
+  // but being async will make unwanted overlap with output difficult
   uint16_t mic_reading = analogRead(PIN_MIC); // 512 +/- 512
   // rescale to stay inside defined boundaries
   uint8_t amplitude = waveform_to_amplitude(mic_reading) / 2; // 0..255

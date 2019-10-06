@@ -1,6 +1,5 @@
 #pragma once
 
-// this could be 
 struct Settings
 {
   // directly used as global brightness modifier

@@ -3,8 +3,6 @@ submodule for code of Volumeter
 
 PlatformIO is used to manage code, see master module for more informations.
 
-TODO: Cleanup of docs, better description
-
 ## Design considerations
 
 ### Input
