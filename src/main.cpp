@@ -35,7 +35,10 @@ const uint8_t PIN_MIC = A2;
 const uint16_t DELAY_TO_SAVE_MS = (5 * 1000);
 const uint32_t MAX_MILLIAMPS = 500;
 
-const float ADJUSTMENT_FACTOR = 1.8f;
+const uint8_t LOOPTIME_MS = 20;
+const float AVG_FACTOR = 0.90f;
+
+const float ADJUSTMENT_FACTOR = 1.9f;
 
 Volumeter<PIN_LEDS, N_LEDS> volumeter(DELAY_TO_SAVE_MS, MAX_MILLIAMPS);
 
@@ -67,9 +70,10 @@ uint16_t waveform_to_amplitude(uint16_t raw_waveform)
  * This is a simple and efficient trick to keep a rolling average.
  * Keep in mind that this is coupled to the execution time, make sure 
  * to keep it predictable.
+ * Smaller factors will lead to faster changes, normalize with time.
  * 
  * */
-uint8_t simple_avg(uint8_t new_value, float factor = 0.95f)
+uint8_t simple_avg(uint8_t new_value, float factor)
 {
   static uint16_t last_value = 0;
 
@@ -117,7 +121,7 @@ void loop()
   uint16_t mic_reading = analogRead(PIN_MIC); // 512 +/- 512
   // rescale to stay inside defined boundaries
   uint8_t amplitude = waveform_to_amplitude(mic_reading) / 2; // 0..255
-  uint8_t average_amplitude = simple_avg(amplitude);
+  uint8_t average_amplitude = simple_avg(amplitude, AVG_FACTOR);
 
   uint8_t scaled_average_amplitude = (ADJUSTMENT_FACTOR * average_amplitude);
   // detect (and fix) overflow
@@ -134,7 +138,12 @@ void loop()
     Serial.println();
   }
 
-  volumeter.read(scaled_average_amplitude);
+  volumeter.update(scaled_average_amplitude);
 
-  FastLED.delay(10); // keep a predictable execution time
+  // decouple output from input, both
+  // are on the same supply and LED noise
+  // can cause a feedback loop to the mic.
+  // Also nice to keep a predictable execution 
+  // time for similar integration constants
+  FastLED.delay(LOOPTIME_MS); 
 }

@@ -257,7 +257,7 @@ public:
     /**
      * call repeatedly from main loop to animate, manage background-timings
      * */
-    void read(uint8_t level)
+    void update(uint8_t level)
     {
         // no old levels needed
 
