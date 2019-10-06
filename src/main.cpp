@@ -4,7 +4,7 @@
 // third-party
 
 // private, local
-#include "uv_meter.h"
+#include "volumeter.h"
 #include "debouncer.h"
 
 /*------------Notes-----------*\
@@ -37,7 +37,7 @@ const uint32_t MAX_MILLIAMPS = 500;
 
 const float ADJUSTMENT_FACTOR = 1.8f;
 
-UV_Meter<PIN_LEDS, N_LEDS> uv_meter(DELAY_TO_SAVE_MS, MAX_MILLIAMPS);
+Volumeter<PIN_LEDS, N_LEDS> volumeter(DELAY_TO_SAVE_MS, MAX_MILLIAMPS);
 
 Debouncer debouncer;
 
@@ -101,7 +101,7 @@ void setup()
   }
 
   // all done
-  uv_meter.startup();
+  volumeter.startup();
 }
 
 void loop()
@@ -109,7 +109,7 @@ void loop()
   bool reading = (digitalRead(PIN_BTN) == LOW); // inverted (pullup)
   if (debouncer.read(reading) == Debouncer::STATE::ST_RISING)
   {
-    uv_meter.next_mode();
+    volumeter.next_mode();
   }
 
   // you could increase speed *a lot* by triggering ADC-read via a HW-timer
@@ -134,7 +134,7 @@ void loop()
     Serial.println();
   }
 
-  uv_meter.read(scaled_average_amplitude);
+  volumeter.read(scaled_average_amplitude);
 
   FastLED.delay(10); // keep a predictable execution time
 }

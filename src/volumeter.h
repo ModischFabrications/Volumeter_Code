@@ -34,7 +34,7 @@ const CRGB C_CRIT = CRGB::Red;
  * */
 
 template <uint8_t PIN_LEDS, uint16_t N_LEDS>
-class UV_Meter
+class Volumeter
 {
 private:
     Settings settings;
@@ -165,7 +165,7 @@ public:
     /**
      * do everything thats's okay "outside of time"
      * */
-    UV_Meter(const uint16_t delay_to_save_ms, uint32_t max_milliamps = 1000) : delay_to_save_ms(delay_to_save_ms)
+    Volumeter(const uint16_t delay_to_save_ms, uint32_t max_milliamps = 1000) : delay_to_save_ms(delay_to_save_ms)
     {
         pinMode(PIN_LEDS, OUTPUT);
 

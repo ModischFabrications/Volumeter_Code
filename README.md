@@ -1,5 +1,5 @@
-# UV_Meter_Code
-submodule for code of UV-Meter
+# volumeter_Code
+submodule for code of Volumeter
 
 PlatformIO is used to manage code, see master module for more informations.
 
@@ -10,12 +10,8 @@ TODO: Cleanup of docs, better description
 ### Input
 
 #### User
-Input: 1 Button, toggles modes
+Input: 1 Button, step through brighness with wraparound
 
-Modes are permutations of:
-Bar/Dot | white/gradient/gradient_at_pos | low/high
-
-gradient: [green, yellow, red]
 
 #### Microphone
 
@@ -26,9 +22,10 @@ The microphone transmits audio signals as an analog signal [0-VCC] with baseline
 Strip of high density RGB-LEDs (144LED/m WS2812B).
 Library used: `FastLED`
 
+gradient: [green, yellow, red]
+
 ### Implementation:
-Write current mode after 10s (ACK) to EEPROM
-`EEPROM.update(address, val);`
+Write current mode after 10s (ACK) to EEPROM, read on startup
 
 ## Uploading
 This code assumes an Arduino Nano as debugger or an Attiny85 for the final version.
